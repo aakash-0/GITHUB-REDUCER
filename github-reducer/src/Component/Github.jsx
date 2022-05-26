@@ -55,24 +55,30 @@ const [{
 }, 
 dispatch ] =  useReducer(githubReducer,initState);
 
-const [text,setText] = useState("");
+const [text,setText] = useState("masai");
+const [_page,setPage] = useState(1);
 
 const handelSubmit =()=>{
-    getData(text);
+    dispatch({type: githubAction.fetch})
+    getData(text,_page);
+    setPage(1);
+
 }
    
 useEffect(()=>{
     dispatch({type: githubAction.fetch})
-    getData();
+    getData(text,_page);
 
-},[])
+},[_page])
 
-const getData = (search="masai")=>{
+const getData = (search="masai",_page)=>{
     axios({
         url:"https://api.github.com/search/users",
         method:"GET",
         params: {
-            q: search
+            page:_page,
+            per_page:10,
+            q:search,
         }
     }).then(res=>{
         
@@ -81,6 +87,7 @@ const getData = (search="masai")=>{
             payload: res.data
         })
     }).catch((error)=>{
+        console.log("here",error)
         dispatch({
             type: githubAction.failure
         })
@@ -97,9 +104,18 @@ return (<div>
     
 </div>
 
- {loading?<div>Loading---</div>:data.items.map((item)=>{
-       return <div key={item.id}> {item.login}</div>
-    })}
+ {loading?<div>Loading...</div>:
+    <div>{data.items.map((item)=>{
+            return <div key={item.id}>
+                        <img width={"20px"} src={item.avatar_url}></img>
+                        {item.login}
+                    </div>
+        })}
+
+        <button disabled={_page===1} onClick={()=>{setPage((prev)=>prev+1)}}>prev</button>
+        <button onClick={()=>{setPage((prev)=>prev+1)}}>next</button>
+    </div>}
+    
     
 
 </div>)
